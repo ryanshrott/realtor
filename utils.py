@@ -22,7 +22,7 @@ s3 = boto3.client('s3', aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_k
 # Initialize the chatbot instance
 from dotenv import load_dotenv
 load_dotenv()
-os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
+os.environ["OPENAI_API_KEY"] = os.environ.get("OPENAI_API_KEY")
 
 def is_email_subscribed(email):
     # Initialize the Stripe API with the given key
