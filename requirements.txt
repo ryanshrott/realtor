@@ -11,7 +11,7 @@ pymongo==4.5.0
 pypdfium2==4.20.0
 pytesseract==0.3.10
 python-dotenv==1.0.0
-python_bcrypt==0.3.2
+py-bcrypt==0.4
 PyYAML==6.0.1
 PyYAML==6.0.1
 Requests==2.31.0
