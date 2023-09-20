@@ -128,4 +128,4 @@ if __name__ == "__main__":
     if st.session_state['verified'] and st.session_state["authentication_status"]:
         if 'subscribed' not in st.session_state:
             st.session_state['subscribed'] = is_email_subscribed(st.session_state['email'])
-        main()
+main()
