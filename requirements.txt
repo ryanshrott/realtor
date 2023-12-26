@@ -1,6 +1,6 @@
 boto3==1.28.44
 chardet==5.2.0
-embedchain==0.1.32
+embedchain==0.1.43
 extra_streamlit_components==0.1.60
 mailchimp3==3.0.21
 openai==1.6.1
