@@ -2,7 +2,9 @@ import streamlit as st
 from io import BytesIO
 from embedchain import App
 from utils import *
-import openai
+from openai import OpenAI
+
+client = OpenAI()
 from chardet.universaldetector import UniversalDetector
 from streamlit_authenticator import Authenticate
 import re
@@ -97,14 +99,12 @@ def main():
 
         name = selected_tenant.replace('_', ' ')  # This should be fetched dynamically
         address = selected_address
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo-16k-0613",
-            messages=[
-                {'role': 'system', 'content': f'You are a critical property manager and are currently evaluating a prospective tenant named {name} for a rental property located at {address}. Your goal is to evaluate the tenant and determine whether they are a good fit for the property. Pay close attention to key metrics like credit score, income level and job stability. Be highly suspect of any red flags.'},
-                {"role": "user", "content": f"Based on the following document from {name} with document type {doc_type}, provide concise meaningful commentary on whether {name} is a good fit for the property.\n ```{file_content}```"}
-            ],
-            temperature=0.0,
-        )
+        response = client.chat.completions.create(model="gpt-3.5-turbo-16k-0613",
+        messages=[
+            {'role': 'system', 'content': f'You are a critical property manager and are currently evaluating a prospective tenant named {name} for a rental property located at {address}. Your goal is to evaluate the tenant and determine whether they are a good fit for the property. Pay close attention to key metrics like credit score, income level and job stability. Be highly suspect of any red flags.'},
+            {"role": "user", "content": f"Based on the following document from {name} with document type {doc_type}, provide concise meaningful commentary on whether {name} is a good fit for the property.\n ```{file_content}```"}
+        ],
+        temperature=0.0)
         response_text = response['choices'][0]['message']['content']
         response_text = response_text.replace('*', '\*').replace('_', '\_')
         response_text = response_text.replace('\xa0', ' ')

@@ -6,7 +6,10 @@ import os
 import requests
 import tempfile
 import base64
-import openai 
+from openai import OpenAI
+os.environ["OPENAI_API_KEY"] = os.environ.get("OPENAI_API_KEY")
+
+client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
 import stripe
 
 
@@ -22,7 +25,6 @@ s3 = boto3.client('s3', aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_k
 # Initialize the chatbot instance
 from dotenv import load_dotenv
 load_dotenv()
-os.environ["OPENAI_API_KEY"] = os.environ.get("OPENAI_API_KEY")
 
 def is_email_subscribed(email):
     # Initialize the Stripe API with the given key
@@ -49,6 +51,7 @@ def save_listing(address):
     key = f"{LISTINGS_FOLDER}{address}/"
     s3.put_object(Bucket=BUCKET_NAME, Key=key)
 
+    
 def fetch_created_listings():
     """Fetch the list of created addresses from S3"""
     response = s3.list_objects_v2(Bucket=BUCKET_NAME, Prefix=LISTINGS_FOLDER, Delimiter='/')
@@ -72,8 +75,7 @@ def download_file_from_s3(bucket_name, object_name):
         return response['Body'].read()
     except s3.exceptions.NoSuchKey:
         return None
-
-
+    
 def download_from_presigned_url(presigned_url):
     """Download a file from a presigned URL and return the path to the temporary file."""
     response = requests.get(presigned_url)
@@ -83,6 +85,7 @@ def download_from_presigned_url(presigned_url):
     with tempfile.NamedTemporaryFile(delete=False, suffix=".txt") as tmp_file:
         tmp_file.write(response.content)
         return tmp_file.name
+    
 def generate_presigned_url(bucket_name, object_name, expiration=3600):
     """Generate a presigned URL to share an S3 object"""
     url = s3.generate_presigned_url('get_object',
@@ -121,13 +124,11 @@ def get_metadata_for_file(bucket_name, file_key):
     response = s3.head_object(Bucket=bucket_name, Key=file_key)
     return response['Metadata']
 
-
 def list_files_for_tenant(address, tenant_name):
     """List all the files uploaded by a specific tenant for the given address"""
     files = get_files_for_tenant(address, tenant_name)
     file_names = [file['Key'] for file in files]
     return file_names, files
-
 
 def extract_url_from_txt(file_path):
     """Extract the URL from a .txt file"""
@@ -154,14 +155,12 @@ def create_bot(selected_address, selected_tenant):
             file_content = f.read()
         name = selected_tenant.replace('_', ' ')  # This should be fetched dynamically
         address = selected_address
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo-16k-0613",
-            messages=[
-                  {'role': 'system', 'content': f'You are very detail oriented property management analyst, who carefully reads all details of an unstructured document and creates a structured document containing all key pieces of information that would be helpful for analyzing the tenant.'},
-                {"role": "user", "content": f"Based on the following messy document from {name} with document type {document_type}, provide a summary of the document. Carefully report all key metrics. Do not provide your own commentary. Just summarize very carefully. Only include information that would be important for determining whether the tenant is a good fit for the rental property. Don't include anything about disclaimers or stuff like that. Here is the document: \n ```{file_content}```"}
-            ],
-            temperature=0.0,
-        )
+        response = client.chat.completions.create(model="gpt-3.5-turbo-16k-0613",
+        messages=[
+              {'role': 'system', 'content': f'You are very detail oriented property management analyst, who carefully reads all details of an unstructured document and creates a structured document containing all key pieces of information that would be helpful for analyzing the tenant.'},
+            {"role": "user", "content": f"Based on the following messy document from {name} with document type {document_type}, provide a summary of the document. Carefully report all key metrics. Do not provide your own commentary. Just summarize very carefully. Only include information that would be important for determining whether the tenant is a good fit for the rental property. Don't include anything about disclaimers or stuff like that. Here is the document: \n ```{file_content}```"}
+        ],
+        temperature=0.0)
         response_text = response['choices'][0]['message']['content']
         response_text = response_text.replace('*', '\*').replace('_', '\_')
         response_text = response_text.replace('\xa0', ' ')
@@ -197,7 +196,6 @@ def display_pdf(file_data):
     
     # Use st.markdown to render the pdf document in Streamlit
     st.markdown(pdf_display, unsafe_allow_html=True)
-
 
 def extract_categories_from_files(address, tenant_name):
     """Extract unique document categories from the list of files."""

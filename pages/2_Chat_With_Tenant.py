@@ -18,6 +18,7 @@ def main():
     tenants = get_tenants_for_address(selected_address)
     selected_tenant = st.selectbox("Select a tenant:", tenants)
 
+
     # Initialize embedchain app
     if st.button("Chat with tenant?"):
         st.session_state['bot'] = create_bot(selected_address, selected_tenant)
@@ -51,6 +52,8 @@ def main():
                     message_placeholder.markdown(full_response + "▌")
                 message_placeholder.markdown(full_response)
             st.session_state.messages.append({"role": "assistant", "content": full_response})
+
+
 if __name__ == "__main__":
     st.session_state['authenticator'] = Authenticate("smartbidscookie3124", "smartbidskey3214", 30)
     if 'authentication_status' not in st.session_state:
